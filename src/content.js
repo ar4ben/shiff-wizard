@@ -1,4 +1,5 @@
 /* global chrome */
+console.log('STARTING...');
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg === 'toggle') {
     toggle();

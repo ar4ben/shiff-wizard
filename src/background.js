@@ -6,6 +6,7 @@
 
 let goals;
 let infotab;
+let maintabId;
 let debugTabId;
 const port = null;
 const requests = {};
@@ -79,9 +80,10 @@ function onEvent(debuggeeId, message, params) {
             regexpMatches.forEach((text, index) => {
               matches.responses[`${goal}`][`${requests[params.requestId]}`].push(text);
             });
-            // chrome.storage.local.set({ matches });
-            chrome.tabs.sendMessage(infotab.id, { greeting: 'hello' }, function (response) {
-              console.log(response.farewell);
+            chrome.storage.local.set({ matches });
+            console.log(`SEND INFO TO INFOTAB: ${infotab.id}`);
+            chrome.tabs.sendMessage(infotab.id, { greeting: 'HELLO' }, function (response) {
+              // console.log(response.farewell);
             });
           }
         });
@@ -104,14 +106,23 @@ function listenTabNetwork() {
 }
 
 function createNewTab() {
-  chrome.tabs.create(
-    {
-      url: chrome.extension.getURL('infotab.html'),
-    },
-    (tab) => {
-      infotab = tab;
-    }
-  );
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    maintabId = tabs[0].id;
+    chrome.tabs.create(
+      {
+        url: chrome.extension.getURL('infotab.html'),
+      },
+      (tab) => {
+        infotab = tab;
+        console.log(`Create infotab: ${tab.id}`);
+        console.log(`Maintab: ${maintabId}`);
+        // delete query because we don't need to know current tab
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          chrome.tabs.reload(maintabId);
+        });
+      }
+    );
+  });
 }
 
 function startWork(popupRequest, trackedGoals) {
@@ -130,9 +141,6 @@ function startWork(popupRequest, trackedGoals) {
   }
   createNewTab();
   listenTabNetwork();
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.reload(tabs[0].id);
-  });
 }
 
 // Listening to messages page

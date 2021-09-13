@@ -13,6 +13,14 @@ class WizardForm extends React.Component {
         selectedSnippet: event.data,
       });
     });
+    chrome.runtime.onMessage.addListener((msg, x, sendResponse) => {
+      if (msg === 'toggle') {
+        toggle();
+      } else {
+        console.log(msg.greeting);
+        sendResponse({answer: "accepted"});
+      }
+    });
   }
 
   handleSubmit = (e) => {
