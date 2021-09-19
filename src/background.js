@@ -82,7 +82,7 @@ function onEvent(debuggeeId, message, params) {
             });
             chrome.storage.local.set({ matches });
             console.log(`SEND INFO TO INFOTAB: ${infotab.id}`);
-            chrome.tabs.sendMessage(infotab.id, { greeting: 'HELLO' }, function (response) {
+            chrome.tabs.sendMessage(infotab.id, { greeting: { matches } }, function (response) {
               // console.log(response.farewell);
             });
           }
