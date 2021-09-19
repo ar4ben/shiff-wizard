@@ -1,14 +1,10 @@
 /* global chrome */
-
 /* eslint-disable no-undef */
-// console.log(`SEND CLICK MESSAGE TO CONTENT SCRIPT. TABID: ${debugTabId}`)
-// chrome.tabs.sendMessage(tabId, {"message": "clicked_browser_action", "tab_id": debugTabId});
 
 let goals;
 let infotab;
 let maintabId;
 let debugTabId;
-const port = null;
 const requests = {};
 const matches = {};
 
@@ -22,11 +18,11 @@ function onAttach() {
   }
 }
 
-function finishWork() {
-  enabled = false;
-  console.log(`detach from tab: ${debugTabId}`);
-  chrome.debugger.detach({ tabId: debugTabId });
-}
+// function finishWatchingRequests() {
+//   enabled = false;
+//   console.log(`detach from tab: ${debugTabId}`);
+//   chrome.debugger.detach({ tabId: debugTabId });
+// }
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
@@ -77,14 +73,11 @@ function onEvent(debuggeeId, message, params) {
             console.log(`FROM: ${requests[params.requestId]}`);
             matches.responses[`${goal}`][`${requests[params.requestId]}`] = [];
             regexpMatches = response.body.match(reg);
-            regexpMatches.forEach((text, index) => {
+            regexpMatches.forEach((text) => {
               matches.responses[`${goal}`][`${requests[params.requestId]}`].push(text);
             });
-            chrome.storage.local.set({ matches });
             console.log(`SEND INFO TO INFOTAB: ${infotab.id}`);
-            chrome.tabs.sendMessage(infotab.id, { greeting: { matches } }, function (response) {
-              // console.log(response.farewell);
-            });
+            chrome.tabs.sendMessage(infotab.id, { responses: matches.responses });
           }
         });
       }
@@ -94,18 +87,25 @@ function onEvent(debuggeeId, message, params) {
 
 function attachToTab() {
   chrome.debugger.attach({ tabId: debugTabId }, '1.0', onAttach.bind(null, debugTabId));
-  chrome.debugger.onDetach.addListener((source, reason) => {
+  chrome.debugger.onDetach.addListener(() => {
     debugTabId = null;
   });
 }
-function listenTabNetwork() {
+function listenMaintabNetwork() {
   // Enables network tracking, network events will now be delivered to the client.
   chrome.debugger.sendCommand({ tabId: debugTabId }, 'Network.enable');
   // Fired whenever debugging target issues instrumentation event.
   chrome.debugger.onEvent.addListener(onEvent);
 }
 
-function createNewTab() {
+function reloadMainTab() {
+  // reload tab for watching requests from target page
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.reload(maintabId);
+  });
+}
+
+function createInfoTab() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     maintabId = tabs[0].id;
     chrome.tabs.create(
@@ -116,16 +116,14 @@ function createNewTab() {
         infotab = tab;
         console.log(`Create infotab: ${tab.id}`);
         console.log(`Maintab: ${maintabId}`);
-        // delete query because we don't need to know current tab
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          chrome.tabs.reload(maintabId);
-        });
+        reloadMainTab();
       }
     );
   });
 }
 
-function startWork(popupRequest, trackedGoals) {
+function startWatchingRequests(popupRequest, trackedGoals) {
+  console.log(`GET MESSAGE FROM CONTENT SCRIPT => GOAL:${trackedGoals}`);
   goals = trackedGoals;
   enabled = true;
   matches.responses = {};
@@ -139,43 +137,33 @@ function startWork(popupRequest, trackedGoals) {
     matches.url = popupRequest.url;
     attachToTab();
   }
-  createNewTab();
-  listenTabNetwork();
+  createInfoTab();
+  listenMaintabNetwork();
 }
-
-// Listening to messages page
-chrome.runtime.onMessage.addListener((request, sender) => {
-  if (request.message === 'wanted') {
-    console.log(Array.isArray(request.goal));
-    console.log(`GET MESSAGE FROM CONTENT SCRIPT: GOAL:${request.goal}`);
-    startWork(request, request.goal);
-  } else if (request.message === 'detach') {
-    console.log(`GET MESSAGE FROM CONTENT SCRIPT TO DETACHE TAB ${request.tabId}`);
-    return;
-    debugTabId = sender.debugTabId;
-    finishWork();
-  } else {
-    // TODO: check this part
-    // alert(request.message);
-  }
-});
 
 startFromWhiteList();
 
-chrome.browserAction.onClicked.addListener(function (tab) {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+// Track if extension icon is clicked
+chrome.browserAction.onClicked.addListener(() => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     chrome.tabs.sendMessage(tabs[0].id, 'toggle');
   });
 });
 
-const remove_toggle_marker = () => {
-  chrome.storage.local.clear();
-};
-
-chrome.tabs.onRemoved.addListener(() => {
-  remove_toggle_marker();
+// Listening messages from pages
+chrome.runtime.onMessage.addListener((request, sender) => {
+  if (request.message === 'wanted') {
+    startWatchingRequests(request, request.goal);
+  } else if (request.message === 'detach') {
+    // debugTabId = sender.debugTabId;
+    // finishWatchingRequests();
+  }
 });
 
+// Clear all if the tab or window were closed
+chrome.tabs.onRemoved.addListener(() => {
+  startFromWhiteList();
+});
 chrome.windows.onRemoved.addListener(() => {
-  remove_toggle_marker();
+  startFromWhiteList();
 });
