@@ -1,5 +1,30 @@
 /*global chrome*/
 import React from "react";
+import Button from '@mui/material/Button';
+import AddIcon from '@material-ui/icons/Add';
+import SearchIcon from '@material-ui/icons/Search';
+import ClearAllIcon from '@material-ui/icons/ClearAll';
+import TextField from '@mui/material/TextField';
+import { styled } from '@mui/material/styles';
+import Stack from '@mui/material/Stack';
+
+const CustomTextField = styled(TextField)({
+  '& .MuiInputLabel-root': {
+    color: '#1976d2',
+  },
+  '& .MuiOutlinedInput-root': {
+    color: 'ghostwhite',
+    '& fieldset': {
+      borderColor: 'rgba(25, 118, 210, 0.5)',
+    },
+    '&:hover fieldset': {
+      borderColor: 'rgba(25, 118, 210, 0.5)',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: 'rgba(25, 118, 210, 0.5)',
+    },
+  },
+});
 
 class WizardForm extends React.Component {
   state = {
@@ -49,26 +74,32 @@ class WizardForm extends React.Component {
     return (
       <div>
         <form id="form" onSubmit={this.handleSubmit}>
-          <button id="clearAll" onClick={this.clearAll}>
-            Clear All
-          </button>
-          <input
-            type="text"
-            id="snippet"
-            value={this.state.selectedSnippet}
-            onChange={this.handleChange}
-          />
-          <button id="addSnippet" onClick={this.addSnippet}>
-            Add Snippet
-          </button>
-          <textarea
-            id="code"
-            value={this.state.allSnippets}
-            readOnly
-          ></textarea>
-          <button type="submit" id="checkPage" onClick={this.handleClick}>
-            Track Snippets
-          </button>
+          <Stack spacing={2}>
+            <CustomTextField
+              id="outlined-basic" 
+              label="Select Text Snippet" 
+              variant="outlined" 
+              value={this.state.selectedSnippet} 
+              onChange={this.handleChange}
+            />
+            <Button variant="contained" startIcon={<AddIcon />} onClick={this.addSnippet}>
+              Add Snippet
+            </Button>
+            <CustomTextField
+              multiline
+              value={this.state.allSnippets}
+              id="outlined-textarea" 
+              label="Selected Snippets" 
+              variant="outlined" 
+              value={this.state.allSnippets} 
+            />
+            <Button variant="contained" startIcon={<SearchIcon />} type="submit">
+              Track Snippets
+            </Button>
+            <Button variant="contained" startIcon={<ClearAllIcon />} onClick={this.clearAll}>
+              Clear All
+            </Button>
+          </Stack>
         </form>
       </div>
     );

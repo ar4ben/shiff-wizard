@@ -1,5 +1,4 @@
 import React from 'react';
-import './App.css';
 import ResponsesTable from './components/responsesTable';
 
 function InfotabUI() {

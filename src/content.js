@@ -12,7 +12,7 @@ const toggle = () => {
 };
 
 const styleIframe = () => {
-  iframe.style.background = 'green';
+  iframe.style.backgroundColor = '#282c34';
   iframe.style.height = '100%';
   iframe.style.width = '0px';
   iframe.style.position = 'fixed';
