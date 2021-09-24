@@ -4,9 +4,7 @@ import ResponsesTable from './components/responsesTable';
 function InfotabUI() {
   return (
     <div className="App">
-      <header className="App-header">
-        <ResponsesTable />
-      </header>
+      <ResponsesTable />
     </div>
   );
 }
