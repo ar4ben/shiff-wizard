@@ -1,57 +1,12 @@
 /*global chrome*/
 import React from "react";
-import { DataGrid } from '@mui/x-data-grid';
-import { withStyles } from "@mui/styles";
-
-// a hack to give rows in the table dynamic height. Otherwise response text in cells will be partially hidden 
-// based on https://github.com/mui-org/material-ui-x/issues/417#issuecomment-917069476
-const StyledDataGrid = withStyles({
-  root: {
-    '& .MuiDataGrid-viewport, & .MuiDataGrid-renderingZone, & .MuiDataGrid-row': {
-      maxHeight: 'fit-content!important',
-    },
-    '& .MuiDataGrid-row .MuiDataGrid-columnsContainer': {
-      maxHeight: 'none!important'
-    },
-    '& .MuiDataGrid-columnHeaderTitle, & .MuiDataGrid-cell': {
-      textOverflow: 'unset',
-      whiteSpace: 'normal',
-      lineHeight: '1.2!important',
-      maxHeight: 'fit-content!important',
-      minHeight: 'auto!important',
-      height: 'auto',
-      display: 'flex',
-      alignItems: 'center',
-      alignSelf: 'stretch',
-
-      '& > div': {
-        maxHeight: 'inherit',
-        width: '100%',
-        whiteSpace: 'initial',
-        lineHeight: '1'
-      }
-    },
-
-    '& .MuiDataGrid-columnHeader > div': {
-      height: '100%'
-    },
-
-    '& .MuiDataGrid-columnHeaderWrapper': {
-      maxHeight: 'none!important',
-      flex: '1 0 auto',
-    },
-
-    '& .MuiDataGrid-row .MuiDataGrid-columnsContainer': {
-      maxHeight: 'none!important'
-    },
-  }
-})(DataGrid);
-
-const columns = [
-  { field: 'snippet', headerName: 'Snippet', flex: 1, },
-  { field: 'resource', headerName: 'Resource', flex: 2, },
-  { field: 'response', headerName: 'Response', flex: 3, },
-];
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
 
 class ResponsesTable extends React.Component {
   state = {
@@ -69,7 +24,7 @@ class ResponsesTable extends React.Component {
     });
   }
 
-  renderResponses = () => {
+  prepareResponses = () => {
     let responseList = [];
     Object.keys(this.state.responses).forEach(snippet => {
       Object.keys(this.state.responses[snippet]).forEach((resource, index) => {
@@ -88,14 +43,29 @@ class ResponsesTable extends React.Component {
 
   render() {
     return (
-      <div style={{ width: '100%' }}>
-        <StyledDataGrid
-          autoHeight
-          rows={ this.renderResponses() }
-          columns={columns}
-          checkboxSelection
-        />
-    </div>
+    <TableContainer component={Paper}>
+      <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
+        <TableHead>
+          <TableRow>
+            <TableCell>Snippet</TableCell>
+            <TableCell>Resource</TableCell>
+            <TableCell>Response</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {this.prepareResponses().map((row) => (
+            <TableRow
+              key={row.id}
+              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+            >
+              <TableCell>{row.snippet}</TableCell>
+              <TableCell>{row.resource}</TableCell>
+              <TableCell>{row.response}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
     );
   }
 }
