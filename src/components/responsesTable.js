@@ -7,6 +7,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { spacing } from "@mui/system";
 
 class ResponsesTable extends React.Component {
   state = {
@@ -60,7 +61,7 @@ class ResponsesTable extends React.Component {
             >
               <TableCell>{row.snippet}</TableCell>
               <TableCell>{row.resource}</TableCell>
-              <TableCell>{row.response}</TableCell>
+              <TableCell sx={{ whiteSpace: 'pre'}}>{row.response}</TableCell>
             </TableRow>
           ))}
         </TableBody>
